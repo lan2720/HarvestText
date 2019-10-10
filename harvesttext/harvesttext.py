@@ -173,6 +173,7 @@ class HarvestText:
             elif "其他专名" in type0:
                 tag0 = "nz"
             jieba.add_word(type0, freq = 10000, tag=tag0)
+
     def hanlp_prepare(self):
         from pyhanlp import HanLP, JClass
         CustomDictionary = JClass("com.hankcs.hanlp.dictionary.CustomDictionary")
@@ -529,6 +530,7 @@ class HarvestText:
         except:
             pass
         return entity_type_dict
+
     def dependency_parse(self, sent, standard_name=False, stopwords=None):
         """
         依存句法分析，调用pyhanlp的接口，并且融入了harvesttext的实体识别机制。
@@ -585,19 +587,32 @@ class HarvestText:
                 if '定中关系' in child_dict:
                     for i in range(len(child_dict['定中关系'])):
                         prefix += complete_e(words, postags, child_dict_list, child_dict['定中关系'][i])
+                elif '状中结构' in child_dict:
+                    for i in range(len(child_dict['状中结构'])):
+                        prefix += complete_e(words, postags, child_dict_list, child_dict['状中结构'][i])
                 postfix = ''
                 if postags[word_index] == 'v':
                     if '动宾关系' in child_dict:
                         postfix += complete_e(words, postags, child_dict_list, child_dict['动宾关系'][0])
+                    if '动补结构' in child_dict and postags[child_dict['动补结构'][0]] != 'p': # 如果动补结构的词性是p则不增加
+                        postfix += complete_e(words, postags, child_dict_list, child_dict['动补结构'][0])
                     if '主谓关系' in child_dict:
                         prefix = complete_e(words, postags, child_dict_list, child_dict['主谓关系'][0]) + prefix
-
+                    if '前置宾语' in child_dict and '状中结构' in child_dict:  # 被动句
+                        prefix += complete_e(words, postags, child_dict_list, child_dict['前置宾语'][-1]) + words[child_dict['状中结构'][-1]]
+                if postags[word_index].startswith('n') and '并列关系' in child_dict:
+                    for j in range(len(child_dict['并列关系'])):
+                        para_c = child_dict['并列关系'][j]
+                        for k in child_dict_list[para_c].keys():
+                            if '左附加关系' in k: # 并列关系时常有连接词
+                                postfix += words[child_dict_list[para_c]['左附加关系'][-1]]
+                                break
+                        postfix += complete_e(words, postags, child_dict_list, para_c)
                 return prefix + words[word_index] + postfix
             elif expand == "None":
                 return words[word_index]
             else:            # (expand == "exclude_entity" and "#"+postags[word_index]+"#" in self.entity_types)
                 return words[word_index]
-
 
         words, postags = ["" for i in range(len(arcs))], ["" for i in range(len(arcs))]
         child_dict_list = [defaultdict(list) for i in range(len(arcs))]
@@ -613,9 +628,18 @@ class HarvestText:
                 # 主谓宾
                 if '主谓关系' in child_dict and '动宾关系' in child_dict:
                     r = words[index]
-                    e1 = complete_e(words, postags, child_dict_list, child_dict['主谓关系'][0])
+                    e1 = complete_e(words, postags, child_dict_list, child_dict['主谓关系'][-1])
                     e2 = complete_e(words, postags, child_dict_list, child_dict['动宾关系'][0])
                     svos.append([e1, r, e2])
+                    # 核心词有自己的宾语且核心动词有并列关系的动词，则抽取核心词svo后继续抽取并列动词svo
+                    if '并列关系' in child_dict:
+                        para_index = child_dict['并列关系'][0]
+                        para_r = words[para_index]
+                        para_e2 = ''
+                        if para_index < len(child_dict_list) and '动宾关系' in child_dict_list[para_index]:
+                            # e1同上不变
+                            para_e2 = complete_e(words, postags, child_dict_list, child_dict_list[para_index]['动宾关系'][0])
+                        svos.append([e1, para_r, para_e2])
 
                 # 定语后置，动宾关系
                 relation = arcs[index][-2]
@@ -630,14 +654,57 @@ class HarvestText:
                             e1 = e1[len(temp_string):]
                         if temp_string not in e1:
                             svos.append([e1, r, e2])
+
                 # 含有介宾关系的主谓动补关系
                 if '主谓关系' in child_dict and '动补结构' in child_dict:
-                    e1 = complete_e(words, postags, child_dict_list, child_dict['主谓关系'][0])
+                    e1 = complete_e(words, postags, child_dict_list, child_dict['主谓关系'][-1])
                     CMP_index = child_dict['动补结构'][0]
-                    r = words[index] + words[CMP_index]
+                    r = words[index]
                     if '介宾关系' in child_dict_list[CMP_index]:
                         e2 = complete_e(words, postags, child_dict_list, child_dict_list[CMP_index]['介宾关系'][0])
                         svos.append([e1, r, e2])
+                    elif '定中关系' in child_dict_list[CMP_index]:
+                        e2 = complete_e(words, postags, child_dict_list, CMP_index)
+                        svos.append([e1, r, e2])
+                    else:
+                        e2 = words[CMP_index]
+                        svos.append([e1, r, e2])
+
+                # 1. 只有主谓没有宾语: eg. 股价下跌
+                # 2. 只有主谓，且由于dp的性能问题，谓语没有直接宾语但与谓语并列的v有直接宾语
+                # 3. 主谓+介宾
+                if '主谓关系' in child_dict and '动补结构' not in child_dict and '动宾关系' not in child_dict:
+                    r = words[index]
+                    e1 = complete_e(words, postags, child_dict_list, child_dict['主谓关系'][-1])
+                    e2 = ''
+                    # 核心词本身没有自己的宾语，与核心词并列的动词有自己的宾语，此时将核心词和并列动词合并后，抽取并列动词的宾语
+                    if '并列关系' in child_dict:
+                        # 需要满足: 核心词是动词，并列词也是动词，且多个并列动词和核心词是连在一起的，才可以进行动词合并
+                        if postags[index].lower().startswith('v'):
+                            para_c = index
+                            for i, para_c in enumerate(sorted(child_dict['并列关系'])):
+                                if postags[para_c] == 'v' and para_c-index == i+1:
+                                    r += words[para_c]
+                                else:
+                                    break
+                            if para_c != index and '动宾关系' in child_dict_list[para_c]:
+                                e2 = complete_e(words, postags, child_dict_list, child_dict_list[para_c]['动宾关系'][0])
+                    elif '介宾关系' in child_dict:
+                        e2 = complete_e(words, postags, child_dict_list, child_dict['介宾关系'][0])
+                    svos.append([e1, r, e2])
+
+                # 被动句
+                if postags[index] == 'v' and '前置宾语' in child_dict:
+                    e1 = ''  # 被动句无主语只有宾语
+                    r_idx = child_dict['前置宾语'][-1]
+                    e2 = complete_e(words, postags, child_dict_list, r_idx)
+                    r = words[index]
+                    if '状中结构' in child_dict:
+                        r = words[child_dict['状中结构'][-1]] + r
+                    if '动宾关系' in child_dict:
+                        r += complete_e(words, postags, child_dict_list, child_dict['动宾关系'][-1])
+
+                    svos.append([e1, r, e2])
         return svos
 
     def clear(self):
