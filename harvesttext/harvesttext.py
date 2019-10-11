@@ -548,6 +548,11 @@ class HarvestText:
         from pyhanlp import HanLP, JClass
         if not self.hanlp_prepared:
             self.hanlp_prepare()
+
+        # TODO: added by @jarvixwang 2019/10/11
+        '''关闭自定义词典的强行干扰: enableCustomDictionaryForcing(False)'''
+        self.deforce_custom_dict()
+
         self.standard_name = standard_name
         entities_info = self.entity_linking(sent)
         sent2 = self.decoref(sent, entities_info)
@@ -581,9 +586,6 @@ class HarvestText:
         :param expand: 默认"all"：扩展所有主谓词，"exclude_entity"：不扩展已知实体，可以保留标准的实体名，用于链接。"None":不扩展
         :return:
         """
-        '''关闭自定义词典的强行干扰: enableCustomDictionaryForcing(False)'''
-        self.deforce_custom_dict()
-
         arcs = self.dependency_parse(sent, standard_name, stopwords)
 
         '''对找出的主语或者宾语进行扩展'''
