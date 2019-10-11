@@ -203,6 +203,11 @@ class HarvestText:
                 del jieba.dt.user_word_tag_tab[tag0]
             jieba.dt.total -= 10000
 
+    def deforce_custom_dict(self):
+        from pyhanlp import JClass
+        StandardTokenizer = JClass("com.hankcs.hanlp.tokenizer.NLPTokenizer")
+        StandardTokenizer.ANALYZER.enableCustomDictionaryForcing(False)
+
     def check_prepared(self):
         if not self.prepared:
             self.prepare()
@@ -348,8 +353,6 @@ class HarvestText:
         self._link_record(surface0, entity0)
         return entity0, type0
 
-
-
     def _entity_recheck(self, sent, entities_info, pinyin_recheck, char_recheck):
         sent2 = self.decoref(sent, entities_info)
         for word, flag in pseg.cut(sent2):
@@ -463,6 +466,7 @@ class HarvestText:
                     continue
             result.append((word, flag))
         return result
+
     def seg(self, sent, standard_name=False, stopwords=None, return_sent=False):
         self.standard_name = standard_name
         entities_info = self.entity_linking(sent)
@@ -577,6 +581,9 @@ class HarvestText:
         :param expand: 默认"all"：扩展所有主谓词，"exclude_entity"：不扩展已知实体，可以保留标准的实体名，用于链接。"None":不扩展
         :return:
         """
+        '''关闭自定义词典的强行干扰: enableCustomDictionaryForcing(False)'''
+        self.deforce_custom_dict()
+
         arcs = self.dependency_parse(sent, standard_name, stopwords)
 
         '''对找出的主语或者宾语进行扩展'''
