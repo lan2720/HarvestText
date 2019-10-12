@@ -609,7 +609,7 @@ class HarvestText:
                         prefix = complete_e(words, postags, child_dict_list, child_dict['主谓关系'][0]) + prefix
                     if '前置宾语' in child_dict and '状中结构' in child_dict:  # 被动句
                         prefix += complete_e(words, postags, child_dict_list, child_dict['前置宾语'][-1]) + words[child_dict['状中结构'][-1]]
-                if postags[word_index].startswith('n') and '并列关系' in child_dict:
+                if 'n' in postags[word_index] and '并列关系' in child_dict:
                     for j in range(len(child_dict['并列关系'])):
                         para_c = child_dict['并列关系'][j]
                         for k in child_dict_list[para_c].keys():
@@ -637,7 +637,10 @@ class HarvestText:
                 # 主谓宾
                 if '主谓关系' in child_dict and '动宾关系' in child_dict:
                     r = words[index]
-                    e1 = complete_e(words, postags, child_dict_list, child_dict['主谓关系'][-1])
+                    e1_index = list(filter(lambda x: 'n' in postags[x], child_dict['主谓关系']))
+                    if len(e1_index) == 0:
+                        continue
+                    e1 = complete_e(words, postags, child_dict_list, e1_index[-1])
                     e2 = complete_e(words, postags, child_dict_list, child_dict['动宾关系'][-1])
                     svos.append([e1, r, e2])
                     # 核心词有自己的宾语且核心动词有并列关系的动词，则抽取核心词svo后继续抽取并列动词svo
@@ -705,8 +708,19 @@ class HarvestText:
                     for a in child_dict_list:
                         for rel, child in a.items():
                             if index in child and rel != '核心关系':
-                                add_flag = False
-                                break
+                                # 如果当前v和其父亲的关系是定中关系，且父亲也是v，则将定中关系的v合并
+                                if rel == '定中关系' and postags[index] == 'v':
+                                    tmp_index = index
+                                    tmp_rel = rel
+                                    while tmp_rel == '定中关系' and postags[tmp_index] == 'v':
+                                        fa = arcs[index][-1]
+                                        r += words[fa]
+                                        tmp_index = fa
+                                        tmp_rel = arcs[fa][-2]
+                                        break
+                                else:
+                                    add_flag = False
+                                    break
                     if add_flag:
                         svos.append([e1, r, e2])
 
