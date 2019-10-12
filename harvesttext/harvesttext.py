@@ -549,9 +549,9 @@ class HarvestText:
         if not self.hanlp_prepared:
             self.hanlp_prepare()
 
-        # TODO: added by @jarvixwang 2019/10/11
-        '''关闭自定义词典的强行干扰: enableCustomDictionaryForcing(False)'''
-        self.deforce_custom_dict()
+        # # TODO: added by @jarvixwang 2019/10/11
+        # '''关闭自定义词典的强行干扰: enableCustomDictionaryForcing(False)'''
+        # self.deforce_custom_dict()
 
         self.standard_name = standard_name
         entities_info = self.entity_linking(sent)
@@ -703,9 +703,10 @@ class HarvestText:
                     # 如果此时谓语是别的节点的孩子，则不符合svo都条件
                     add_flag = True
                     for a in child_dict_list:
-                        if index in list(chain(*a.values())):
-                            add_flag = False
-                            break
+                        for rel, child in a.items():
+                            if index in child and rel != '核心关系':
+                                add_flag = False
+                                break
                     if add_flag:
                         svos.append([e1, r, e2])
 
