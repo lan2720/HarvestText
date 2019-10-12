@@ -14,7 +14,7 @@ from .resources import get_qh_sent_dict
 import logging
 import warnings
 from pypinyin import lazy_pinyin, pinyin
-
+from itertools import chain
 
 class HarvestText:
     def __init__(self, standard_name=False):
@@ -638,7 +638,7 @@ class HarvestText:
                 if '主谓关系' in child_dict and '动宾关系' in child_dict:
                     r = words[index]
                     e1 = complete_e(words, postags, child_dict_list, child_dict['主谓关系'][-1])
-                    e2 = complete_e(words, postags, child_dict_list, child_dict['动宾关系'][0])
+                    e2 = complete_e(words, postags, child_dict_list, child_dict['动宾关系'][-1])
                     svos.append([e1, r, e2])
                     # 核心词有自己的宾语且核心动词有并列关系的动词，则抽取核心词svo后继续抽取并列动词svo
                     if '并列关系' in child_dict:
@@ -700,7 +700,14 @@ class HarvestText:
                                 e2 = complete_e(words, postags, child_dict_list, child_dict_list[para_c]['动宾关系'][0])
                     elif '介宾关系' in child_dict:
                         e2 = complete_e(words, postags, child_dict_list, child_dict['介宾关系'][0])
-                    svos.append([e1, r, e2])
+                    # 如果此时谓语是别的节点的孩子，则不符合svo都条件
+                    add_flag = True
+                    for a in child_dict_list:
+                        if index in list(chain(*a.values())):
+                            add_flag = False
+                            break
+                    if add_flag:
+                        svos.append([e1, r, e2])
 
                 # 被动句
                 if postags[index] == 'v' and '前置宾语' in child_dict:
