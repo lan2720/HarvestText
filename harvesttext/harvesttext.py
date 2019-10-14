@@ -596,7 +596,12 @@ class HarvestText:
                 if '定中关系' in child_dict:
                     for i in range(len(child_dict['定中关系'])):
                         prefix += complete_e(words, postags, child_dict_list, child_dict['定中关系'][i])
-                elif '状中结构' in child_dict:
+                if postags[word_index] == 'v':
+                    if '主谓关系' in child_dict:
+                        prefix = complete_e(words, postags, child_dict_list, child_dict['主谓关系'][0]) + prefix
+                    if '前置宾语' in child_dict:  # 被动句
+                        prefix += complete_e(words, postags, child_dict_list, child_dict['前置宾语'][-1])
+                if '状中结构' in child_dict:
                     for i in range(len(child_dict['状中结构'])):
                         prefix += complete_e(words, postags, child_dict_list, child_dict['状中结构'][i])
                 postfix = ''
@@ -608,10 +613,6 @@ class HarvestText:
                         postfix += complete_e(words, postags, child_dict_list, child_dict['动宾关系'][0])
                     if '动补结构' in child_dict and postags[child_dict['动补结构'][0]] != 'p': # 如果动补结构的词性是p则不增加
                         postfix += complete_e(words, postags, child_dict_list, child_dict['动补结构'][0])
-                    if '主谓关系' in child_dict:
-                        prefix = complete_e(words, postags, child_dict_list, child_dict['主谓关系'][0]) + prefix
-                    if '前置宾语' in child_dict and '状中结构' in child_dict:  # 被动句
-                        prefix += complete_e(words, postags, child_dict_list, child_dict['前置宾语'][-1]) + words[child_dict['状中结构'][-1]]
                 if 'n' in postags[word_index] and '并列关系' in child_dict:
                     for j in range(len(child_dict['并列关系'])):
                         para_c = child_dict['并列关系'][j]
