@@ -604,9 +604,8 @@ class HarvestText:
                 if '状中结构' in child_dict:
                     for i in range(len(child_dict['状中结构'])):
                         tmp_idx = child_dict['状中结构'][i]
-                        if postags[tmp_idx] == 'f':  # 跳过方位词的状中结构
-                            continue
-                        prefix += complete_e(words, postags, child_dict_list, tmp_idx)
+                        if postags[tmp_idx] != 'f':  # 跳过方位词的状中结构
+                            prefix += complete_e(words, postags, child_dict_list, tmp_idx)
                 postfix = ''
                 if '介宾关系' in child_dict:
                     for t in range(len(child_dict['介宾关系'])):
@@ -685,11 +684,11 @@ class HarvestText:
                     if '介宾关系' in child_dict_list[CMP_index]:
                         e2 = complete_e(words, postags, child_dict_list, child_dict_list[CMP_index]['介宾关系'][0])
                         svos.append([e1, r, e2])
-                    elif '定中关系' in child_dict_list[CMP_index]:
-                        e2 = complete_e(words, postags, child_dict_list, CMP_index)
-                        svos.append([e1, r, e2])
+                    #elif '定中关系' in child_dict_list[CMP_index]:
+                    #    e2 = complete_e(words, postags, child_dict_list, CMP_index)
+                    #    svos.append([e1, r, e2])
                     else:
-                        e2 = words[CMP_index]
+                        e2 = complete_e(words, postags, child_dict_list, CMP_index)
                         svos.append([e1, r, e2])
 
                 # 1. 只有主谓没有宾语: eg. 股价下跌
@@ -742,7 +741,7 @@ class HarvestText:
                     r_idx = child_dict['前置宾语'][-1]
                     e2 = complete_e(words, postags, child_dict_list, r_idx)
                     r = words[index]
-                    if '状中结构' in child_dict:
+                    if '状中结构' in child_dict and postags[child_dict['状中结构'][-1]] != 'f':
                         r = words[child_dict['状中结构'][-1]] + r
                     if '动宾关系' in child_dict:
                         r += complete_e(words, postags, child_dict_list, child_dict['动宾关系'][-1])
