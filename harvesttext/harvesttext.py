@@ -600,6 +600,9 @@ class HarvestText:
                     for i in range(len(child_dict['状中结构'])):
                         prefix += complete_e(words, postags, child_dict_list, child_dict['状中结构'][i])
                 postfix = ''
+                if '介宾关系' in child_dict:
+                    for t in range(len(child_dict['介宾关系'])):
+                        postfix += complete_e(words, postags, child_dict_list, child_dict['介宾关系'][t])
                 if postags[word_index] == 'v':
                     if '动宾关系' in child_dict:
                         postfix += complete_e(words, postags, child_dict_list, child_dict['动宾关系'][0])
@@ -710,10 +713,10 @@ class HarvestText:
                         for rel, child in a.items():
                             if index in child and rel != '核心关系':
                                 # 如果当前v和其父亲的关系是定中关系，且父亲也是v，则将定中关系的v合并
-                                if rel == '定中关系' and postags[index] == 'v':
+                                if rel == '定中关系' and 'v' in postags[index]:
                                     tmp_index = index
                                     tmp_rel = rel
-                                    while tmp_rel == '定中关系' and postags[tmp_index] == 'v':
+                                    while tmp_rel == '定中关系' and 'v' in postags[tmp_index]:
                                         fa = arcs[index][-1]
                                         r += words[fa]
                                         tmp_index = fa
