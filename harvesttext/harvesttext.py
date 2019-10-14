@@ -637,7 +637,7 @@ class HarvestText:
                 # 主谓宾
                 if '主谓关系' in child_dict and '动宾关系' in child_dict:
                     r = words[index]
-                    e1_index = list(filter(lambda x: 'n' in postags[x], child_dict['主谓关系']))
+                    e1_index = list(filter(lambda x: 'n' in postags[x] or 'v' in postags[x], child_dict['主谓关系']))
                     if len(e1_index) == 0:
                         continue
                     e1 = complete_e(words, postags, child_dict_list, e1_index[-1])
@@ -698,6 +698,7 @@ class HarvestText:
                                 if postags[para_c] == 'v' and para_c-index == i+1:
                                     r += words[para_c]
                                 else:
+                                    para_c = sorted(child_dict['并列关系'])[i-1]
                                     break
                             if para_c != index and '动宾关系' in child_dict_list[para_c]:
                                 e2 = complete_e(words, postags, child_dict_list, child_dict_list[para_c]['动宾关系'][0])
