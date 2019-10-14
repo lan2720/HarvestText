@@ -640,9 +640,14 @@ class HarvestText:
             if postags[index]:
                 # 抽取以谓词为中心的事实三元组
                 child_dict = child_dict_list[index]
+                r = words[index]
+                # 去掉 介词p 方位词f
+                if '状中结构' in child_dict and \
+                    postags[child_dict['状中结构'][-1]] != 'f' and \
+                    postags[child_dict['状中结构'][-1]] != 'p':
+                    r = words[child_dict['状中结构'][-1]] + r
                 # 主谓宾
                 if '主谓关系' in child_dict and '动宾关系' in child_dict:
-                    r = words[index]
                     e1_index = list(filter(lambda x: 'n' in postags[x] or
                                                      'v' in postags[x] or
                                                      'j' in postags[x],
@@ -668,7 +673,6 @@ class HarvestText:
                 if relation == '定中关系':
                     if '动宾关系' in child_dict:
                         e1 = complete_e(words, postags, child_dict_list, head)
-                        r = words[index]
                         e2 = complete_e(words, postags, child_dict_list, child_dict['动宾关系'][0])
                         temp_string = r + e2
                         if temp_string == e1[:len(temp_string)]:
@@ -680,7 +684,6 @@ class HarvestText:
                 if '主谓关系' in child_dict and '动补结构' in child_dict:
                     e1 = complete_e(words, postags, child_dict_list, child_dict['主谓关系'][-1])
                     CMP_index = child_dict['动补结构'][0]
-                    r = words[index]
                     if '介宾关系' in child_dict_list[CMP_index]:
                         e2 = complete_e(words, postags, child_dict_list, child_dict_list[CMP_index]['介宾关系'][0])
                         svos.append([e1, r, e2])
@@ -695,7 +698,6 @@ class HarvestText:
                 # 2. 只有主谓，且由于dp的性能问题，谓语没有直接宾语但与谓语并列的v有直接宾语
                 # 3. 主谓+介宾
                 if '主谓关系' in child_dict and '动补结构' not in child_dict and '动宾关系' not in child_dict:
-                    r = words[index]
                     for m in range(len(child_dict['主谓关系'])):
                         e1 = complete_e(words, postags, child_dict_list, child_dict['主谓关系'][m])
                         e2 = ''
@@ -740,9 +742,8 @@ class HarvestText:
                     e1 = ''  # 被动句无主语只有宾语
                     r_idx = child_dict['前置宾语'][-1]
                     e2 = complete_e(words, postags, child_dict_list, r_idx)
-                    r = words[index]
-                    if '状中结构' in child_dict and postags[child_dict['状中结构'][-1]] != 'f':
-                        r = words[child_dict['状中结构'][-1]] + r
+                    # if '状中结构' in child_dict and postags[child_dict['状中结构'][-1]] != 'd' and postags[child_dict['状中结构'][-1]] != 'f':
+                    #     r = words[child_dict['状中结构'][-1]] + r
                     if '动宾关系' in child_dict:
                         r += complete_e(words, postags, child_dict_list, child_dict['动宾关系'][-1])
 
