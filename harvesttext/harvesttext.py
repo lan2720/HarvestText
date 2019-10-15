@@ -615,7 +615,7 @@ class HarvestText:
                 if '介宾关系' in child_dict:
                     for t in range(len(child_dict['介宾关系'])):
                         postfix += complete_e(words, postags, child_dict_list, child_dict['介宾关系'][t])
-                if postags[word_index] == 'v':
+                if postags[word_index].lower().startswith('v'):
                     if '动宾关系' in child_dict:
                         postfix += complete_e(words, postags, child_dict_list, child_dict['动宾关系'][0])
                     if '动补结构' in child_dict and postags[child_dict['动补结构'][0]] != 'p': # 如果动补结构的词性是p则不增加
@@ -668,7 +668,7 @@ class HarvestText:
                     e2 = complete_e(words, postags, child_dict_list, child_dict['动宾关系'][-1])
                     svos.append([e1, r, e2])
                     # 核心词有自己的宾语且核心动词有并列关系的动词，则抽取核心词svo后继续抽取并列动词svo
-                    if '并列关系' in child_dict:
+                    if '并列关系' in child_dict and postags[child_dict['并列关系'][0]].lower().startswith('v'):
                         para_index = child_dict['并列关系'][0]
                         para_r = words[para_index]
                         para_e2 = ''
@@ -732,10 +732,10 @@ class HarvestText:
                             for rel, child in a.items():
                                 if index in child and rel != '核心关系':
                                     # 如果当前v和其父亲的关系是定中关系，且父亲也是v，则将定中关系的v合并
-                                    if rel == '定中关系' and 'v' in postags[index]:
+                                    if rel == '定中关系' and 'v' in postags[index].lower():
                                         tmp_index = index
                                         tmp_rel = rel
-                                        while tmp_rel == '定中关系' and 'v' in postags[tmp_index]:
+                                        while tmp_rel == '定中关系' and 'v' in postags[tmp_index].lower():
                                             fa = arcs[index][-1]
                                             r += words[fa]
                                             tmp_index = fa
