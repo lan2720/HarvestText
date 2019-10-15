@@ -600,7 +600,7 @@ class HarvestText:
                         if '右附加关系' in child_dict_list[child_dict['定中关系'][i]]:
                             rightatt = child_dict_list[child_dict['定中关系'][i]]['右附加关系'][-1]
                             prefix += words[rightatt]
-                if postags[word_index] == 'v':
+                if postags[word_index].startswith('v'):
                     if '主谓关系' in child_dict:
                         prefix = complete_e(words, postags, child_dict_list, child_dict['主谓关系'][0]) + prefix
                     if '前置宾语' in child_dict:  # 被动句
@@ -620,6 +620,9 @@ class HarvestText:
                         postfix += complete_e(words, postags, child_dict_list, child_dict['动宾关系'][0])
                     if '动补结构' in child_dict and postags[child_dict['动补结构'][0]] != 'p': # 如果动补结构的词性是p则不增加
                         postfix += complete_e(words, postags, child_dict_list, child_dict['动补结构'][0])
+                    # 并列动词合并
+                    if '并列关系' in child_dict and postags[child_dict['并列关系'][0]].startswith('v'):
+                        postfix += complete_e(words, postags, child_dict_list, child_dict['并列关系'][0])
                 if 'n' in postags[word_index] and '并列关系' in child_dict:
                     for j in range(len(child_dict['并列关系'])):
                         para_c = child_dict['并列关系'][j]
