@@ -716,13 +716,15 @@ class HarvestText:
                             # 需要满足: 核心词是动词，并列词也是动词，且多个并列动词和核心词是连在一起的，才可以进行动词合并
                             para_c = index
                             for i, para_c in enumerate(sorted(child_dict['并列关系'])):
-                                if postags[para_c] == 'v' and para_c-index == i+1:
+                                if postags[para_c].lower().startswith('v') and para_c-index == i+1:
                                     r += words[para_c]
                                 else:
                                     para_c = sorted(child_dict['并列关系'])[i-1]
                                     break
                             if para_c != index and '动宾关系' in child_dict_list[para_c]:
                                 e2 = complete_e(words, postags, child_dict_list, child_dict_list[para_c]['动宾关系'][0])
+                            elif postags[para_c].lower().startswith('v'): # 如果并列的部分还是v，可以作为自行独立的谓词
+                                r = words[para_c]
                         elif '介宾关系' in child_dict:
                             e2 = complete_e(words, postags, child_dict_list, child_dict['介宾关系'][0])
                         # 如果此时谓语是别的节点的孩子，则不符合svo都条件
