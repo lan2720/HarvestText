@@ -600,17 +600,17 @@ class HarvestText:
                         if '右附加关系' in child_dict_list[child_dict['定中关系'][i]]:
                             rightatt = child_dict_list[child_dict['定中关系'][i]]['右附加关系'][-1]
                             prefix += words[rightatt]
-                if postags[word_index].startswith('v'):
-                    if '主谓关系' in child_dict:
-                        prefix = complete_e(words, postags, child_dict_list, child_dict['主谓关系'][0]) + prefix
-                    if '前置宾语' in child_dict:  # 被动句
-                        prefix += complete_e(words, postags, child_dict_list, child_dict['前置宾语'][-1])
                 # 这里是对s和o进行扩展
                 if '状中结构' in child_dict:
                     for i in range(len(child_dict['状中结构'])):
                         tmp_idx = child_dict['状中结构'][i]
                         if postags[tmp_idx] != 'f':  # 跳过方位词的状中结构
                             prefix += complete_e(words, postags, child_dict_list, tmp_idx)
+                # if postags[word_index].startswith('v'):
+                if '主谓关系' in child_dict:
+                    prefix += complete_e(words, postags, child_dict_list, child_dict['主谓关系'][0]) #+ prefix
+                if '前置宾语' in child_dict:  # 被动句
+                    prefix += complete_e(words, postags, child_dict_list, child_dict['前置宾语'][-1])
                 postfix = ''
                 if '介宾关系' in child_dict:
                     for t in range(len(child_dict['介宾关系'])):
@@ -653,7 +653,8 @@ class HarvestText:
                 if '状中结构' in child_dict and \
                     postags[child_dict['状中结构'][-1]] != 'f' and \
                     postags[child_dict['状中结构'][-1]] != 'c' and \
-                    postags[child_dict['状中结构'][-1]] != 't':
+                    postags[child_dict['状中结构'][-1]] != 't' and \
+                    postags[child_dict['状中结构'][-1]] != 'm':
                     r = complete_e(words, postags, child_dict_list, child_dict['状中结构'][-1]) + r
                 # 主谓宾
                 if '主谓关系' in child_dict and '动宾关系' in child_dict:
