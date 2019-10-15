@@ -597,6 +597,9 @@ class HarvestText:
                 if '定中关系' in child_dict:
                     for i in range(len(child_dict['定中关系'])):
                         prefix += complete_e(words, postags, child_dict_list, child_dict['定中关系'][i])
+                        if '右附加关系' in child_dict_list[child_dict['定中关系'][i]]:
+                            rightatt = child_dict_list[child_dict['定中关系'][i]]['右附加关系'][-1]
+                            prefix += words[rightatt]
                 if postags[word_index] == 'v':
                     if '主谓关系' in child_dict:
                         prefix = complete_e(words, postags, child_dict_list, child_dict['主谓关系'][0]) + prefix
@@ -651,9 +654,9 @@ class HarvestText:
                     r = complete_e(words, postags, child_dict_list, child_dict['状中结构'][-1]) + r
                 # 主谓宾
                 if '主谓关系' in child_dict and '动宾关系' in child_dict:
-                    e1_index = list(filter(lambda x: 'n' in postags[x] or
-                                                     'v' in postags[x] or
-                                                     'j' in postags[x],
+                    e1_index = list(filter(lambda x: 'n' in postags[x].lower() or
+                                                     'v' in postags[x].lower() or
+                                                     'j' in postags[x].lower(),
                                            child_dict['主谓关系']))
                     if len(e1_index) == 0:
                         continue
