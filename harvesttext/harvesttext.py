@@ -593,6 +593,7 @@ class HarvestText:
             if expand == "all" or (expand == "exclude_entity" and "#"+postags[word_index]+"#" not in self.entity_types):
                 child_dict = child_dict_list[word_index]
                 prefix = ''
+                # 定语是对主语或宾语进行扩展
                 if '定中关系' in child_dict:
                     for i in range(len(child_dict['定中关系'])):
                         prefix += complete_e(words, postags, child_dict_list, child_dict['定中关系'][i])
@@ -601,6 +602,7 @@ class HarvestText:
                         prefix = complete_e(words, postags, child_dict_list, child_dict['主谓关系'][0]) + prefix
                     if '前置宾语' in child_dict:  # 被动句
                         prefix += complete_e(words, postags, child_dict_list, child_dict['前置宾语'][-1])
+                # 这里是对s和o进行扩展
                 if '状中结构' in child_dict:
                     for i in range(len(child_dict['状中结构'])):
                         tmp_idx = child_dict['状中结构'][i]
@@ -641,11 +643,12 @@ class HarvestText:
                 # 抽取以谓词为中心的事实三元组
                 child_dict = child_dict_list[index]
                 r = words[index]
-                # 去掉 介词p 方位词f
+                # 这是对谓词进行扩展
                 if '状中结构' in child_dict and \
                     postags[child_dict['状中结构'][-1]] != 'f' and \
-                    postags[child_dict['状中结构'][-1]] != 'p':
-                    r = words[child_dict['状中结构'][-1]] + r
+                    postags[child_dict['状中结构'][-1]] != 'c' and \
+                    postags[child_dict['状中结构'][-1]] != 't':
+                    r = complete_e(words, postags, child_dict_list, child_dict['状中结构'][-1]) + r
                 # 主谓宾
                 if '主谓关系' in child_dict and '动宾关系' in child_dict:
                     e1_index = list(filter(lambda x: 'n' in postags[x] or
@@ -744,9 +747,10 @@ class HarvestText:
                     e2 = complete_e(words, postags, child_dict_list, r_idx)
                     # if '状中结构' in child_dict and postags[child_dict['状中结构'][-1]] != 'd' and postags[child_dict['状中结构'][-1]] != 'f':
                     #     r = words[child_dict['状中结构'][-1]] + r
+                    if '动补结构' in child_dict:
+                        r += complete_e(words, postags, child_dict_list, child_dict['动补结构'][-1])
                     if '动宾关系' in child_dict:
                         r += complete_e(words, postags, child_dict_list, child_dict['动宾关系'][-1])
-
                     svos.append([e1, r, e2])
         return svos
 
