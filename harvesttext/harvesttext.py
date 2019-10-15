@@ -723,9 +723,9 @@ class HarvestText:
                                     break
                             if para_c != index and '动宾关系' in child_dict_list[para_c]:
                                 e2 = complete_e(words, postags, child_dict_list, child_dict_list[para_c]['动宾关系'][0])
-                            elif postags[para_c].lower().startswith('v'): # 如果并列的部分还是v，可以作为自行独立的谓词
-                                para_r = words[para_c]
-                                svos.append([e1, para_r, e2])
+                            # elif postags[para_c].lower().startswith('v'): # 如果并列的部分还是v，可以作为自行独立的谓词
+                            #     para_r = words[para_c]
+                            #     svos.append([e1, para_r, e2])
                         elif '介宾关系' in child_dict:
                             e2 = complete_e(words, postags, child_dict_list, child_dict['介宾关系'][0])
                         # 如果此时谓语是别的节点的孩子，则不符合svo都条件
